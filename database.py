@@ -1,6 +1,5 @@
-from re import X
 import sqlite3
-from tkinter import N
+from typing import List
 
 from aes import AES
 
@@ -39,7 +38,10 @@ class Database:
         self.con.commit()
 
     def get_entry(self, id) -> Entry:
-        self.cur.execute(f"SELECT * FROM logins WHERE id = {id};")
+        try:
+            self.cur.execute(f"SELECT * FROM logins WHERE id = {id};")
+        except:
+            return None
         n = self.cur.fetchone()
         try:
             return Entry(
@@ -50,14 +52,16 @@ class Database:
         except (IndexError, TypeError):
             return None
 
-    def get_entry_by_site(self, site):
+    def get_entry_by_site(self, site) -> List[Entry]:
         self.cur.execute(f"SELECT * FROM logins WHERE site = '{site}';")
-        n = self.cur.fetchone()
-        try:
-            return Entry(
-                n[0],
-                self.aes.b64dec(n[1]),
-                n[2]
-            )
-        except (IndexError, TypeError):
-            return None
+        entries = []
+        for n in self.cur.fetchall():
+            try:
+                entries.append(Entry(
+                    n[0],
+                    self.aes.b64dec(n[1]),
+                    n[2]
+                ))
+            except (IndexError, TypeError):
+                pass
+        return entries

@@ -39,15 +39,19 @@ while True:
             continue
         entry = db.get_entry(args[0])
         if entry == None:
-            entry = db.get_entry_by_site(args[0])
-
-        if entry == None:
-            console.print("Entry not found!", style="red")
-            continue
-
-        console.print(f"Login:    [yellow]{entry.login}[/]")
-        console.print(f"Password: [green]{entry.password}[/]")
-        console.print(f"Site:     [blue underline]{entry.site}[/]")
+            entries = db.get_entry_by_site(args[0])
+            if len(entries) == 0:
+                console.print("Entry not found!", style="red")
+                continue
+            
+            for en in entries:
+                console.print(f"Login:    [yellow]{en.login}[/]")
+                console.print(f"Password: [green]{en.password}[/]")
+                console.print(f"Site:     [blue underline]{en.site}[/]")
+        else:
+            console.print(f"Login:    [yellow]{entry.login}[/]")
+            console.print(f"Password: [green]{entry.password}[/]")
+            console.print(f"Site:     [blue underline]{entry.site}[/]")
 
     elif cmd in ["exit", "q", "quit"]:
         console.print("Bye ^_^", style="bold blue")
