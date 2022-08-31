@@ -54,6 +54,13 @@ class Database:
         except (IndexError, TypeError):
             return None
 
+    def del_entry(self, id) -> bool:
+        if self.get_entry(id) == None:
+            return False
+        
+        self.cur.execute(f"DELETE FROM logins WHERE id = {id};")
+        return True
+
     def get_entries_by_site(self, site) -> List[Entry]:
         self.cur.execute(f"SELECT * FROM logins WHERE site = '{site}';")
         entries = []

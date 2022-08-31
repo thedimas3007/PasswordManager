@@ -1,9 +1,26 @@
 from database import Database
 from rich.console import Console
 from rich.table import Table
+from rich.box import ROUNDED as box
 
 console = Console()
-db = Database(console.input("Enter password > "))
+db = None
+while True:
+    db = Database(console.input("Enter password > "))
+    try:
+        db.get_entries()
+        break
+    except UnicodeDecodeError:
+        console.print("Invalid password!", style="red")
+
+commands = {
+    "create <site>": "create new entry",
+    "get <id/site>": "get entry by id/site",
+    "remove <id>": "remove entry by id",
+    "list": "list of current entries",
+    "help": "help message",
+    "exit": "bye :3",
+}
 
 color = "blue"
 while True:
@@ -33,7 +50,7 @@ while True:
             color = "red"
             continue
         entry = db.get_entry(args[0])
-        table = Table(title="Passwords")
+        table = Table(title="Passwords", box=box)
         table.add_column("ID", style="purple")
         table.add_column("Login", style="yellow")
         table.add_column("Password", style="green")
@@ -63,7 +80,7 @@ while True:
 
     elif cmd in ["list", "ls"]:
         entries = db.get_entries()
-        table = Table(title="Passwords")
+        table = Table(title="Passwords", box=box)
         table.add_column("ID", style="purple")
         table.add_column("Login", style="yellow")
         table.add_column("Password", style="green")
@@ -78,9 +95,26 @@ while True:
             )
         console.print(table)
 
+    elif cmd in ["remove", "rem", "delete", "del"]:
+        if len(args) == 0:
+            console.print("Not enough arguments!", style="red")
+            color = "red"
+            continue
+
+        if db.del_entry(args[0]):
+            console.print(f"Successfully removed entry with ID {args[0]}")
+        else:
+            console.print("Entry not found!", style="red")
+
+    elif cmd in ["help"]:
+        for command, decription in commands.items():
+            console.print(f"[yellow]{command}[/] - {decription}", highlight=False)
+
     elif cmd in ["exit", "q", "quit"]:
         console.print("Bye ^_^", style="bold blue")
+        db.con.close()
         exit()
+
     else:
         color = "red"
 
