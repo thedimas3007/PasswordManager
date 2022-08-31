@@ -4,10 +4,11 @@ from typing import List
 from aes import AES
 
 class Entry:
-    def __init__(self, login: str, password: str, site: str) -> None:
+    def __init__(self, login: str, password: str, site: str, id: int) -> None:
         self.login = login
         self.password = password
         self.site = site
+        self.id = id
 
 class Database:
     def __init__(self, password: str) -> None:
@@ -47,12 +48,13 @@ class Database:
             return Entry(
                 n[0],
                 self.aes.b64dec(n[1]),
-                n[2]
+                n[2],
+                n[3]
             )
         except (IndexError, TypeError):
             return None
 
-    def get_entry_by_site(self, site) -> List[Entry]:
+    def get_entries_by_site(self, site) -> List[Entry]:
         self.cur.execute(f"SELECT * FROM logins WHERE site = '{site}';")
         entries = []
         for n in self.cur.fetchall():
@@ -60,7 +62,23 @@ class Database:
                 entries.append(Entry(
                     n[0],
                     self.aes.b64dec(n[1]),
-                    n[2]
+                    n[2],
+                    n[3]
+                ))
+            except (IndexError, TypeError):
+                pass
+        return entries
+    
+    def get_entries(self) -> List[Entry]:
+        self.cur.execute(f"SELECT * FROM logins;")
+        entries = []
+        for n in self.cur.fetchall():
+            try:
+                entries.append(Entry(
+                    n[0],
+                    self.aes.b64dec(n[1]),
+                    n[2],
+                    n[3]
                 ))
             except (IndexError, TypeError):
                 pass
