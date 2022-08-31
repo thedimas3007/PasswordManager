@@ -1,12 +1,13 @@
 import sqlite3
 from typing import List
-
+from pyotp import TOTP
 from aes import AES
 
 class Entry:
-    def __init__(self, login: str, password: str, site: str, id: int) -> None:
+    def __init__(self, login: str, password: str, otp: str, site: str, id: int) -> None:
         self.login = login
         self.password = password
+        self.otp = otp
         self.site = site
         self.id = id
 
@@ -18,6 +19,7 @@ class Database:
         self.cur.execute("""CREATE TABLE IF NOT EXISTS logins (
             login VARCHAR(255) NOT NULL,
             password VARCHAR(255) NOT NULL,
+            otp VARCHAR(255),
             site VARCHAR(255) NOT NULL,
             id INTEGER UNIQUE PRIMARY KEY AUTOINCREMENT
         );""")
@@ -49,9 +51,11 @@ class Database:
                 n[0],
                 self.aes.b64dec(n[1]),
                 n[2],
-                n[3]
+                n[3],
+                n[4]
             )
-        except (IndexError, TypeError):
+        except (IndexError, TypeError) as e:
+            print(type(e), e)
             return None
 
     def del_entry(self, id) -> bool:
@@ -70,7 +74,8 @@ class Database:
                     n[0],
                     self.aes.b64dec(n[1]),
                     n[2],
-                    n[3]
+                    n[3],
+                    n[4]
                 ))
             except (IndexError, TypeError):
                 pass
@@ -85,8 +90,19 @@ class Database:
                     n[0],
                     self.aes.b64dec(n[1]),
                     n[2],
-                    n[3]
+                    n[3],
+                    n[4]
                 ))
             except (IndexError, TypeError):
                 pass
         return entries
+    
+    def otp_update(self, id, code) -> bool:
+        try:
+            TOTP(code).now()
+        except:
+            return False
+
+        self.cur.execute(f"UPDATE logins SET otp = '{code}' WHERE id = {id}")
+        self.con.commit()
+        return True
